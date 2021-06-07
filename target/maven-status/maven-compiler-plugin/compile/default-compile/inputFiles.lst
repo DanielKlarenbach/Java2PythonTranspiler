@@ -1,4 +1,4 @@
-/home/daniel/Uczelnia/Semestr 6/Kompilatory/Laby/Java2PythonTranspiler/src/main/java/klarenbach/daniel/Java11Lexer.java
-/home/daniel/Uczelnia/Semestr 6/Kompilatory/Laby/Java2PythonTranspiler/src/main/java/klarenbach/daniel/Java11Visitor.java
-/home/daniel/Uczelnia/Semestr 6/Kompilatory/Laby/Java2PythonTranspiler/src/main/java/klarenbach/daniel/Java11BaseVisitor.java
-/home/daniel/Uczelnia/Semestr 6/Kompilatory/Laby/Java2PythonTranspiler/src/main/java/klarenbach/daniel/Java11Parser.java
+/home/daniel/Uczelnia/Semestr 6/Kompilatory/Laby/Java2PythonTranspiler/src/main/java/klarenbach/daniel/antlr/Java11Parser.java
+/home/daniel/Uczelnia/Semestr 6/Kompilatory/Laby/Java2PythonTranspiler/src/main/java/klarenbach/daniel/antlr/Java11Visitor.java
+/home/daniel/Uczelnia/Semestr 6/Kompilatory/Laby/Java2PythonTranspiler/src/main/java/klarenbach/daniel/antlr/Java11BaseVisitor.java
+/home/daniel/Uczelnia/Semestr 6/Kompilatory/Laby/Java2PythonTranspiler/src/main/java/klarenbach/daniel/antlr/Java11Lexer.java
