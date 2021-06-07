@@ -50,6 +50,8 @@
                             </configuration>
                         </execution>
                     </executions>
+                    <configuration>
+                        <outputDirectory>src/main/java/klarenbach/daniel</outputDirectory>                    </configuration>
                 </plugin>
 
             </plugins>
