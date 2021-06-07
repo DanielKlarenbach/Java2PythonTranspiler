@@ -51,6 +51,11 @@
                         </execution>
                     </executions>
                     <configuration>
+                        <arguments>
+                            <argument>-package</argument>
+                            <argument>klarenbach.daniel.antlr</argument>
+
+                        </arguments>
                         <outputDirectory>src/main/java/klarenbach/daniel/antlr</outputDirectory>
                     </configuration>
                 </plugin>
