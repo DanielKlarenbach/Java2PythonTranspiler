@@ -51,7 +51,8 @@
                         </execution>
                     </executions>
                     <configuration>
-                        <outputDirectory>src/main/java/klarenbach/daniel</outputDirectory>                    </configuration>
+                        <outputDirectory>src/main/java/klarenbach/daniel/antlr</outputDirectory>
+                    </configuration>
                 </plugin>
 
             </plugins>
