@@ -1,67 +1,38 @@
 grammar Java11;
-//Gramatyka
 
-program: (methodDeclaration | variableDeclaration) EOF;
+/*
+ * Parser rules
+ */
 
-stringLiteral: (CHAR_LITERAL)+;
+program: methodDeclaration EOF;
 
-boolLiteral: TRUE
-	| FALSE;
+methodDeclaration: modifier methodType IDENTIFIER LPAREN parameter? RPAREN block;
 
-basicType: BOOLEAN
-	| INT
-	| FLOAT
-	| CHAR
-	| STRING;
+modifier: PRIVATE | PUBLIC;
 
-literal: NULL_LITERAL
-	| INT_LITERAL
-	| FLOAT_LITERAL
-	| CHAR_LITERAL
-	| boolLiteral
-	| stringLiteral;
+methodType: type | VOID;
 
-basicTypeVoid: basicType
-	| VOID
-	;
+parameter: type IDENTIFIER (COMMA type IDENTIFIER)*;
 
-modifier: PRIVATE
-	| PUBLIC;
+block: LBRACE statement* RBRACE;
 
-methodDeclaration: modifier basicTypeVoid IDENTIFIER LPAREN param? RPAREN block;
-
-param: basicType IDENTIFIER (COMMA basicType IDENTIFIER)*;
-
-block: LBRACE blockStatement* RBRACE;
-
-blockStatement: statement
-	| variableDeclaration SEMI;
-
-statement: assignment SEMI
+statement:
+    assignment SEMI
 	| IF LPAREN expression RPAREN statement (ELSE statement)?
 	| FOR LPAREN forControl RPAREN statement
 	| WHILE LPAREN expression RPAREN statement
 	| DO statement WHILE LPAREN expression RPAREN
-	| RETURN expression?
-	| BREAK IDENTIFIER?
+	| RETURN expression? SEMI
+	| BREAK IDENTIFIER? SEMI
+	|variableDeclaration SEMI
 	| block
 	| SEMI;
 
-expressionList: expression (COMMA expression)*;
+variableDeclaration: type IDENTIFIER (ASSIGN expression)? SEMI;
 
-methodCall
-    : IDENTIFIER '(' expressionList? ')'
-    ;
+assignment: IDENTIFIER ASSIGN expression SEMI;
 
-forControl: forInit? SEMI expression? SEMI expressionList?;
-
-forInit: variableDeclaration
-    | expressionList;
-
-variableDeclaration: basicType IDENTIFIER (ASSIGN expression)? SEMI;
-
-expression: methodCall
-	| expression postfix=(INC | DEC)
+expression:  expression postfix=(INC | DEC)
 	| prefix=(ADD | SUB| INC | DEC) expression
 	| expression bop=(MUL | DIV | MOD) expression
 	| expression bop=(ADD | SUB) expression
@@ -74,9 +45,34 @@ primary: LPAREN expression RPAREN
 	| literal
 	| IDENTIFIER;
 
-assignment: IDENTIFIER ASSIGN expression;
+forControl: forInit? SEMI expression? SEMI expressionList?;
 
-//Tokeny
+forInit: variableDeclaration | expressionList;
+
+expressionList: expression (COMMA expression)*;
+
+type:
+    BOOLEAN
+	| INT
+	| FLOAT
+	| CHAR
+	| STRING;
+
+literal:
+    NULL_LITERAL
+	| INT_LITERAL
+	| FLOAT_LITERAL
+	| CHAR_LITERAL
+	| boolLiteral
+	| stringLiteral;
+
+stringLiteral: (CHAR_LITERAL)+;
+
+boolLiteral: TRUE | FALSE;
+
+/*
+ * Lexer rules
+ */
 
 LPAREN:             '(';
 RPAREN:             ')';
@@ -111,8 +107,8 @@ BOOLEAN:            'boolean';
 INT:                'int';
 FLOAT:              'float';
 VOID:               'void';
-CHAR:			'char';
-STRING:		'string';
+CHAR:				'char';
+STRING:				'String';
 
 ELSE:               'else';
 ELSEIF:             'else if';
@@ -123,12 +119,12 @@ BREAK:				'break';
 RETURN:             'return';
 PRIVATE:            'private';
 PUBLIC:             'public';
-CLASS:				'class';
 TRUE:				'true';
 FALSE:				'false';
+DO:                 'do';
 
 NULL_LITERAL:       'null';
 INT_LITERAL : 		[0-9]+;
 FLOAT_LITERAL : 	[0-9]+'.'[0-9]+;
 CHAR_LITERAL:		[.];
-IDENTIFIER:         [a-zA-Z] [a-zA-Z0-9_]*;
+IDENTIFIER:         [a-zA-Z][a-zA-Z0-9_]*;
