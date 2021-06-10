@@ -4,7 +4,7 @@ grammar Java11;
  * Parser rules
  */
 
-program: methodDeclaration EOF;
+program: (methodDeclaration | statementList)+ EOF;
 
 methodDeclaration: modifier methodType IDENTIFIER LPAREN parameter? RPAREN block;
 
@@ -14,26 +14,29 @@ methodType: type | VOID;
 
 parameter: type IDENTIFIER (COMMA type IDENTIFIER)*;
 
+statementList: statement+;
+
 block: LBRACE statement* RBRACE;
 
 statement:
     assignment SEMI
-	| IF LPAREN expression RPAREN statement (ELSE statement)?
-	| FOR LPAREN forControl RPAREN statement
-	| WHILE LPAREN expression RPAREN statement
-	| DO statement WHILE LPAREN expression RPAREN
+	| IF LPAREN expression RPAREN block (ELSE block)?
+	| FOR LPAREN forControl RPAREN block
+	| WHILE LPAREN expression RPAREN block
 	| RETURN expression? SEMI
 	| BREAK IDENTIFIER? SEMI
-	|variableDeclaration SEMI
+	| variableDeclaration SEMI
+	| expression SEMI
 	| block
 	| SEMI;
 
-variableDeclaration: type IDENTIFIER (ASSIGN expression)? SEMI;
+variableDeclaration: type IDENTIFIER (ASSIGN expression)?;
 
-assignment: IDENTIFIER ASSIGN expression SEMI;
+assignment: IDENTIFIER ASSIGN expression;
+
+forControl: variableDeclaration SEMI expression SEMI expression;
 
 expression:  expression postfix=(INC | DEC)
-	| prefix=(ADD | SUB| INC | DEC) expression
 	| expression bop=(MUL | DIV | MOD) expression
 	| expression bop=(ADD | SUB) expression
 	| expression bop=(LE | GE | GT | LT) expression
@@ -44,12 +47,6 @@ expression:  expression postfix=(INC | DEC)
 primary: LPAREN expression RPAREN
 	| literal
 	| IDENTIFIER;
-
-forControl: forInit? SEMI expression? SEMI expressionList?;
-
-forInit: variableDeclaration | expressionList;
-
-expressionList: expression (COMMA expression)*;
 
 type:
     BOOLEAN
@@ -62,11 +59,13 @@ literal:
     NULL_LITERAL
 	| INT_LITERAL
 	| FLOAT_LITERAL
-	| CHAR_LITERAL
+	| charLiteral
 	| boolLiteral
 	| stringLiteral;
 
-stringLiteral: (CHAR_LITERAL)+;
+stringLiteral: QUOTE(CHAR_LITERAL)+QUOTE;
+
+charLiteral: SINGLEQUOTE CHAR_LITERAL SINGLEQUOTE;
 
 boolLiteral: TRUE | FALSE;
 
@@ -83,6 +82,8 @@ RBRACK:             ']';
 SEMI:               ';';
 COMMA:              ',';
 DOT:                '.';
+QUOTE:              '"';
+SINGLEQUOTE:        '\'';
 
 ASSIGN:             '=';
 GT:                 '>';
@@ -126,5 +127,6 @@ DO:                 'do';
 NULL_LITERAL:       'null';
 INT_LITERAL : 		[0-9]+;
 FLOAT_LITERAL : 	[0-9]+'.'[0-9]+;
-CHAR_LITERAL:		[.];
+WHITESPACE:         (' ' | '\t' | '\n') -> skip ;
+CHAR_LITERAL:		~["'];
 IDENTIFIER:         [a-zA-Z][a-zA-Z0-9_]*;

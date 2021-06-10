@@ -22,7 +22,7 @@ public class Java2PythonTranspiler {
     }
 
     private void writeToPythonFile(String pathToFile, String content) throws IOException {
-        Files.write(Paths.get(pathToFile),content.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE);
+        Files.write(Paths.get(pathToFile),content.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     }
 
     private String transpile(String source) {
