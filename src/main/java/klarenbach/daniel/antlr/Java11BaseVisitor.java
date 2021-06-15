@@ -82,7 +82,7 @@ public abstract class Java11BaseVisitor<T> extends AbstractParseTreeVisitor<T> i
 	 */
 	@Override public T visitArgumentList(Java11Parser.ArgumentListContext ctx) { return visitChildren(ctx); }
 
-	public abstract String visitBlock(Java11Parser.BlockContext ctx, int level);
+    public abstract String visitBlock(Java11Parser.BlockContext ctx, int level);
 
 	public abstract String visitStatement(Java11Parser.StatementContext ctx, int level);
 

@@ -33,7 +33,7 @@ methodInvocation: IDENTIFIER LPAREN argumentList? RPAREN;
 
 argumentList: (IDENTIFIER| literal) (COMMA (IDENTIFIER | literal))*;
 
-variableDeclaration: type IDENTIFIER (ASSIGN expression)?;
+variableDeclaration: type IDENTIFIER (ASSIGN (expression | methodInvocation))?;
 
 assignment: IDENTIFIER ASSIGN expression;
 

@@ -146,8 +146,12 @@ public class Java11VisitorImplementation extends Java11BaseVisitor<String> {
 
    @Override
     public String visitVariableDeclaration(Java11Parser.VariableDeclarationContext ctx) {
-        if(ctx.ASSIGN()!=null)
-            return ctx.IDENTIFIER().getText()+SPACE+ASSIGMENT_OPERATOR+SPACE+visitExpression(ctx.expression())+NEW_LINE_SPECIAL_CHARACTER;
+        if(ctx.ASSIGN()!=null) {
+            if (ctx.expression()!=null)
+                return ctx.IDENTIFIER().getText() + SPACE + ASSIGMENT_OPERATOR + SPACE + visitExpression(ctx.expression()) + NEW_LINE_SPECIAL_CHARACTER;
+            else
+                return visitMethodInvocation(ctx.methodInvocation());
+        }
         else{
             if (ctx.type().STRING()!=null)
                 return ctx.IDENTIFIER().getText() + SPACE + ASSIGMENT_OPERATOR + SPACE + "" + NEW_LINE_SPECIAL_CHARACTER;
@@ -157,8 +161,7 @@ public class Java11VisitorImplementation extends Java11BaseVisitor<String> {
                 return ctx.IDENTIFIER().getText() + SPACE + ASSIGMENT_OPERATOR + SPACE + "0" + NEW_LINE_SPECIAL_CHARACTER;
             else if (ctx.type().BOOLEAN()!=null)
                 return ctx.IDENTIFIER().getText() + SPACE + ASSIGMENT_OPERATOR + SPACE + FALSE_LITERAL + NEW_LINE_SPECIAL_CHARACTER;
-            else
-                return ctx.IDENTIFIER().getText() + SPACE + ASSIGMENT_OPERATOR + SPACE + "" + NEW_LINE_SPECIAL_CHARACTER;
+            return ctx.IDENTIFIER().getText() + SPACE + ASSIGMENT_OPERATOR + SPACE + "" + NEW_LINE_SPECIAL_CHARACTER;
         }
     }
 
