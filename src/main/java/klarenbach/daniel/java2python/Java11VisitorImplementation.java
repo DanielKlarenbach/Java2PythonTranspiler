@@ -150,7 +150,7 @@ public class Java11VisitorImplementation extends Java11BaseVisitor<String> {
             if (ctx.expression()!=null)
                 return ctx.IDENTIFIER().getText() + SPACE + ASSIGMENT_OPERATOR + SPACE + visitExpression(ctx.expression()) + NEW_LINE_SPECIAL_CHARACTER;
             else
-                return visitMethodInvocation(ctx.methodInvocation());
+                return ctx.IDENTIFIER().getText() + SPACE + ASSIGMENT_OPERATOR + SPACE + visitMethodInvocation(ctx.methodInvocation()) + NEW_LINE_SPECIAL_CHARACTER;
         }
         else{
             if (ctx.type().STRING()!=null)
