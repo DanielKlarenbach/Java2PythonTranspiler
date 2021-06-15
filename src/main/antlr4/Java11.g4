@@ -14,38 +14,47 @@ methodType: type | VOID;
 
 parameter: type IDENTIFIER (COMMA type IDENTIFIER)*;
 
-statementList: statement+;
+block: LBRACE statementList RBRACE;
 
-block: LBRACE statement* RBRACE;
+statementList: statement+;
 
 statement:
     assignment SEMI
-	| IF LPAREN expression RPAREN block (ELSE block)?
+	| IF LPAREN booleanExpression RPAREN block (ELSE block)?
 	| FOR LPAREN forControl RPAREN block
-	| WHILE LPAREN expression RPAREN block
+	| WHILE LPAREN booleanExpression RPAREN block
 	| RETURN expression? SEMI
 	| BREAK IDENTIFIER? SEMI
 	| variableDeclaration SEMI
-	| expression SEMI
-	| block
-	| SEMI;
+	| postfixExpression SEMI
+	| methodInvocation SEMI;
+
+methodInvocation: IDENTIFIER LPAREN argumentList? RPAREN;
+
+argumentList: (IDENTIFIER| literal) (COMMA (IDENTIFIER | literal))*;
 
 variableDeclaration: type IDENTIFIER (ASSIGN expression)?;
 
 assignment: IDENTIFIER ASSIGN expression;
 
-forControl: variableDeclaration SEMI expression SEMI expression;
+forControl: variableDeclaration SEMI booleanExpression SEMI postfixExpression;
 
-expression:  expression postfix=(INC | DEC)
-	| expression bop=(MUL | DIV | MOD) expression
-	| expression bop=(ADD | SUB) expression
-	| expression bop=(LE | GE | GT | LT) expression
-	| expression bop=(EQUAL | NOTEQUAL) expression
-    | expression bop=(POW | AND | OR) expression
+expression:
+    postfixExpression
+	| arthmeticExpression
+	| booleanExpression
 	| primary;
 
-primary: LPAREN expression RPAREN
-	| literal
+postfixExpression: primary postfix=(INC | DEC);
+
+arthmeticExpression:
+    primary bop=(MUL | DIV | MOD | ADD | SUB | POW) primary;
+
+booleanExpression:
+    primary bop=(LE | GE | GT | LT | EQUAL | NOTEQUAL | AND | OR) primary;
+
+primary:
+	literal
 	| IDENTIFIER;
 
 type:
@@ -59,13 +68,11 @@ literal:
     NULL_LITERAL
 	| INT_LITERAL
 	| FLOAT_LITERAL
-	| charLiteral
+	| CHAR_LITERAL
 	| boolLiteral
 	| stringLiteral;
 
-stringLiteral: QUOTE(CHAR_LITERAL)+QUOTE;
-
-charLiteral: SINGLEQUOTE CHAR_LITERAL SINGLEQUOTE;
+stringLiteral: STRING_LITERAL;
 
 boolLiteral: TRUE | FALSE;
 
@@ -82,8 +89,6 @@ RBRACK:             ']';
 SEMI:               ';';
 COMMA:              ',';
 DOT:                '.';
-QUOTE:              '"';
-SINGLEQUOTE:        '\'';
 
 ASSIGN:             '=';
 GT:                 '>';
@@ -128,5 +133,6 @@ NULL_LITERAL:       'null';
 INT_LITERAL : 		[0-9]+;
 FLOAT_LITERAL : 	[0-9]+'.'[0-9]+;
 WHITESPACE:         (' ' | '\t' | '\n') -> skip ;
-CHAR_LITERAL:		~["'];
+CHAR_LITERAL:       '\'' (~['\\\r\n]) '\'';
 IDENTIFIER:         [a-zA-Z][a-zA-Z0-9_]*;
+STRING_LITERAL:     '"' (~["\\\r\n])* '"';

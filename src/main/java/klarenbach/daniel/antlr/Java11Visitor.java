@@ -41,23 +41,35 @@ public interface Java11Visitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitParameter(Java11Parser.ParameterContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link Java11Parser#statementList}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitStatementList(Java11Parser.StatementListContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link Java11Parser#block}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitBlock(Java11Parser.BlockContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link Java11Parser#statementList}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStatementList(Java11Parser.StatementListContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link Java11Parser#statement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitStatement(Java11Parser.StatementContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link Java11Parser#methodInvocation}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMethodInvocation(Java11Parser.MethodInvocationContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link Java11Parser#argumentList}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArgumentList(Java11Parser.ArgumentListContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link Java11Parser#variableDeclaration}.
 	 * @param ctx the parse tree
@@ -83,6 +95,24 @@ public interface Java11Visitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitExpression(Java11Parser.ExpressionContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link Java11Parser#postfixExpression}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPostfixExpression(Java11Parser.PostfixExpressionContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link Java11Parser#arthmeticExpression}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArthmeticExpression(Java11Parser.ArthmeticExpressionContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link Java11Parser#booleanExpression}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBooleanExpression(Java11Parser.BooleanExpressionContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link Java11Parser#primary}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -106,12 +136,6 @@ public interface Java11Visitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitStringLiteral(Java11Parser.StringLiteralContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link Java11Parser#charLiteral}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitCharLiteral(Java11Parser.CharLiteralContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link Java11Parser#boolLiteral}.
 	 * @param ctx the parse tree

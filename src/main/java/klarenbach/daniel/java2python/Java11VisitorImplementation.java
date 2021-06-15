@@ -4,6 +4,7 @@ import klarenbach.daniel.antlr.Java11BaseVisitor;
 import klarenbach.daniel.antlr.Java11Parser;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 
 public class Java11VisitorImplementation extends Java11BaseVisitor<String> {
 
@@ -20,8 +21,8 @@ public class Java11VisitorImplementation extends Java11BaseVisitor<String> {
     private static final String IF_KEYWORD = "if";
     private static final String ELSE_KEYWORD = "else";
     private static final String ASSIGMENT_OPERATOR = "=";
-    private static final String DECREMENT_OPERATOR = "-=";
-    private static final String INCREMENT_OPERATOR = "+=";
+    private static final String DECREMENT_OPERATOR = "-= 1";
+    private static final String INCREMENT_OPERATOR = "+= 1";
     private static final String MODULO_OPERATOR = "%";
     private static final String DIVISION_OPERATOR = "/";
     private static final String MULTIPLICATION_OPERATOR = "*";
@@ -65,15 +66,16 @@ public class Java11VisitorImplementation extends Java11BaseVisitor<String> {
 
     @Override
     public String visitMethodDeclaration(Java11Parser.MethodDeclarationContext ctx) {
-        return DEF_KEYWORD+SPACE+ctx.IDENTIFIER().getText()+LPAREN+visitParameter(ctx.parameter())+RPAREN+COLON+NEW_LINE_SPECIAL_CHARACTER
-                +visitBlock(ctx.block());
+        String parameters = ctx.parameter()!=null ? visitParameter(ctx.parameter()) : "";
+        return DEF_KEYWORD+SPACE+ctx.IDENTIFIER().getText()+LPAREN+parameters+RPAREN+COLON+NEW_LINE_SPECIAL_CHARACTER
+                +visitBlock(ctx.block(),0);
     }
 
     @Override
     public String visitStatementList(Java11Parser.StatementListContext ctx) {
         StringBuilder result= new StringBuilder();
         for(int i=0; i<ctx.statement().size();i++){
-            result.append(visitStatement(ctx.statement(i)));
+            result.append(visitStatement(ctx.statement(i),0));
         }
         return result.toString();
     }
@@ -101,39 +103,43 @@ public class Java11VisitorImplementation extends Java11BaseVisitor<String> {
     }
 
     @Override
-    public String visitBlock(Java11Parser.BlockContext ctx) {
+    public String visitBlock(Java11Parser.BlockContext ctx, int level) {
         StringBuilder result= new StringBuilder();
-        for(int i=0; i<ctx.statement().size();i++){
-            result.append(TAB_SPECIAL_CHARACTER);
-            result.append(visitStatement(ctx.statement(i)));
+        for(int i=0; i<ctx.statementList().statement().size();i++){
+            result.append(TAB_SPECIAL_CHARACTER.repeat(Math.max(0, level + 1)));
+            result.append(visitStatement(ctx.statementList().statement(i),level+1));
         }
         return result.toString();
     }
 
     @Override
-    public String visitStatement(Java11Parser.StatementContext ctx) {
+    public String visitStatement(Java11Parser.StatementContext ctx, int level) {
         if(ctx.assignment()!=null)
             return visitAssignment(ctx.assignment());
         else if(ctx.FOR()!=null)
-            return FOR_KEYWORD+SPACE+visitForControl(ctx.forControl())+visitBlock(ctx.block(0));
+            return FOR_KEYWORD+SPACE+visitForControl(ctx.forControl())+visitBlock(ctx.block(0),level);
         else if(ctx.IF()!=null)
             if(ctx.ELSE()!=null)
-                return IF_KEYWORD+SPACE+visitExpression(ctx.expression())+COLON+NEW_LINE_SPECIAL_CHARACTER+visitBlock(ctx.block(0))
-                        +ELSE_KEYWORD+COLON+NEW_LINE_SPECIAL_CHARACTER+visitBlock(ctx.block(1));
+                return IF_KEYWORD+SPACE+visitBooleanExpression(ctx.booleanExpression())+COLON+NEW_LINE_SPECIAL_CHARACTER+visitBlock(ctx.block(0),level)
+                        +TAB_SPECIAL_CHARACTER.repeat(Math.max(0, level))+ELSE_KEYWORD+COLON+NEW_LINE_SPECIAL_CHARACTER+visitBlock(ctx.block(1),level);
             else
-                return IF_KEYWORD+SPACE+visitExpression(ctx.expression())+COLON+NEW_LINE_SPECIAL_CHARACTER+visitBlock(ctx.block(0));
+                return IF_KEYWORD+SPACE+visitBooleanExpression(ctx.booleanExpression())+COLON+NEW_LINE_SPECIAL_CHARACTER+visitBlock(ctx.block(0),level);
         else if(ctx.WHILE()!=null)
-            return WHILE_KEYWORD+SPACE+visitExpression(ctx.expression())+COLON+NEW_LINE_SPECIAL_CHARACTER+visitBlock(ctx.block(0));
-        else if(ctx.RETURN()!=null)
-            return RETURN_KEYWORD+SPACE+visitExpression(ctx.expression())+NEW_LINE_SPECIAL_CHARACTER;
-        else if(ctx.BREAK()!=null)
-            return BREAK_KEYWORD+SPACE+ctx.IDENTIFIER().getText()+NEW_LINE_SPECIAL_CHARACTER;
+            return WHILE_KEYWORD+SPACE+visitBooleanExpression(ctx.booleanExpression())+COLON+NEW_LINE_SPECIAL_CHARACTER+visitBlock(ctx.block(0),level);
+        else if(ctx.RETURN()!=null) {
+            String expression = ctx.expression()!=null ? visitExpression(ctx.expression()) : "";
+            return RETURN_KEYWORD + SPACE + expression + NEW_LINE_SPECIAL_CHARACTER;
+        }
+        else if(ctx.BREAK()!=null) {
+            String identifier = ctx.IDENTIFIER()!=null ? ctx.IDENTIFIER().getText() : "";
+            return BREAK_KEYWORD + SPACE + identifier + NEW_LINE_SPECIAL_CHARACTER;
+        }
         else if(ctx.variableDeclaration()!=null)
             return visitVariableDeclaration(ctx.variableDeclaration());
-        else if(ctx.block()!=null)
-            return visitBlock(ctx.block(0));
-        else if(ctx.expression()!=null)
-            return visitExpression(ctx.expression());
+        else if(ctx.methodInvocation()!=null)
+            return visitMethodInvocation(ctx.methodInvocation());
+        else if(ctx.postfixExpression()!=null)
+            return visitPostfixExpression(ctx.postfixExpression())+NEW_LINE_SPECIAL_CHARACTER;
         else
             return "";
     }
@@ -161,61 +167,73 @@ public class Java11VisitorImplementation extends Java11BaseVisitor<String> {
         return ctx.IDENTIFIER().getText()+SPACE+ASSIGMENT_OPERATOR+SPACE+visitExpression(ctx.expression())+NEW_LINE_SPECIAL_CHARACTER;
     }
 
+    @Override public String visitMethodInvocation(Java11Parser.MethodInvocationContext ctx) {
+        String arguments = ctx.argumentList()!=null ? visitArgumentList(ctx.argumentList()) : "";
+        return ctx.IDENTIFIER()+LPAREN+arguments+RPAREN+NEW_LINE_SPECIAL_CHARACTER;
+    }
+
+    @Override public String visitArgumentList(Java11Parser.ArgumentListContext ctx) {
+        StringBuilder result= new StringBuilder();
+        int identifierCount = 0;
+        int literalCount = 0;
+        for(int i=0; i<ctx.getChildCount();i++){
+            if(!ctx.getChild(i).getText().equals(",")) {
+                if (!ctx.getChild(i).getText().startsWith("\"") && !ctx.getChild(i).getText().startsWith("'")
+                        && !ctx.getChild(i).getText().matches("^[0-9]")) {
+                    result.append(ctx.IDENTIFIER(identifierCount));
+                    identifierCount++;
+                } else {
+                    result.append(visitLiteral(ctx.literal(literalCount)));
+                    literalCount++;
+                }
+                result.append(COMMA);
+                result.append(SPACE);
+            }
+        }
+        result.deleteCharAt(result.length()-1);
+        result.deleteCharAt(result.length()-1);
+
+        return result.toString();
+    }
+
     @Override
     public String visitExpression(Java11Parser.ExpressionContext ctx) {
-        if (ctx.postfix!=null){
-            if(ctx.INC()!=null)
-                return visitExpression(ctx.expression(0))+SPACE+INCREMENT_OPERATOR+SPACE+"1";
-            else
-                return visitExpression(ctx.expression(0))+SPACE+DECREMENT_OPERATOR+SPACE+"1";
-        }
-        else if (ctx.bop!=null){
-            if(ctx.MUL()!=null)
-                return visitExpression(ctx.expression(0))+SPACE+ctx.MUL().getText()+SPACE+visitExpression(ctx.expression(1));
-            else if(ctx.DIV()!=null)
-                return visitExpression(ctx.expression(0))+SPACE+ctx.DIV().getText()+SPACE+visitExpression(ctx.expression(1));
-            else if(ctx.MOD()!=null)
-                return visitExpression(ctx.expression(0))+SPACE+ctx.MOD().getText()+SPACE+visitExpression(ctx.expression(1));
-            else if(ctx.ADD()!=null)
-                return visitExpression(ctx.expression(0))+SPACE+ctx.ADD().getText()+SPACE+visitExpression(ctx.expression(1));
-            else if(ctx.SUB()!=null)
-                return visitExpression(ctx.expression(0))+SPACE+ctx.SUB().getText()+SPACE+visitExpression(ctx.expression(1));
-            else if(ctx.LE()!=null)
-                return visitExpression(ctx.expression(0))+SPACE+ctx.LE().getText()+SPACE+visitExpression(ctx.expression(1));
-            else if(ctx.GE()!=null)
-                return visitExpression(ctx.expression(0))+SPACE+ctx.GE().getText()+SPACE+visitExpression(ctx.expression(1));
-            else if(ctx.GT()!=null)
-                return visitExpression(ctx.expression(0))+SPACE+ctx.GT().getText()+SPACE+visitExpression(ctx.expression(1));
-            else if(ctx.LT()!=null)
-                return visitExpression(ctx.expression(0))+SPACE+ctx.LT().getText()+SPACE+visitExpression(ctx.expression(1));
-            else if(ctx.EQUAL()!=null)
-                return visitExpression(ctx.expression(0))+SPACE+ctx.EQUAL().getText()+SPACE+visitExpression(ctx.expression(1));
-            else if(ctx.NOTEQUAL()!=null)
-                return visitExpression(ctx.expression(0))+SPACE+ctx.NOTEQUAL().getText()+SPACE+visitExpression(ctx.expression(1));
-            else if(ctx.POW()!=null)
-                return visitExpression(ctx.expression(0))+SPACE+ctx.POW().getText()+SPACE+visitExpression(ctx.expression(1));
-            else if(ctx.AND()!=null)
-                return visitExpression(ctx.expression(0))+SPACE+ctx.AND().getText()+SPACE+visitExpression(ctx.expression(1));
-            else
-                return visitExpression(ctx.expression(0))+SPACE+ctx.OR().getText()+SPACE+visitExpression(ctx.expression(1));
-        }
-        else
-            return visitPrimary(ctx.primary());
+        if(ctx.postfixExpression()!=null)
+            return visitPostfixExpression(ctx.postfixExpression());
+        else if(ctx.arthmeticExpression()!=null)
+            return visitArthmeticExpression(ctx.arthmeticExpression());
+        else if(ctx.booleanExpression()!=null)
+            return visitBooleanExpression(ctx.booleanExpression());
+        return visitPrimary(ctx.primary());
+    }
+
+    @Override
+    public String visitPostfixExpression(Java11Parser.PostfixExpressionContext ctx) {
+        String operator = ctx.postfix.getText().contains("++") ? INCREMENT_OPERATOR : DECREMENT_OPERATOR;
+        return visitPrimary(ctx.primary())+SPACE+operator;
+    }
+
+    @Override
+    public String visitArthmeticExpression(Java11Parser.ArthmeticExpressionContext ctx) {
+        return visitPrimary(ctx.primary(0))+SPACE+ctx.bop.getText()+SPACE+visitPrimary(ctx.primary(1));
+    }
+
+    @Override
+    public String visitBooleanExpression(Java11Parser.BooleanExpressionContext ctx) {
+        return visitPrimary(ctx.primary(0))+SPACE+ctx.bop.getText()+SPACE+visitPrimary(ctx.primary(1));
     }
 
     @Override
     public String visitPrimary(Java11Parser.PrimaryContext ctx) {
-       if(ctx.LPAREN()!=null)
-           return LPAREN+visitExpression(ctx.expression())+RPAREN;
-       else if(ctx.literal()!=null)
+        if(ctx.literal()!=null)
            return visitLiteral(ctx.literal());
-       else
+        else
            return ctx.IDENTIFIER().getText();
     }
 
     @Override
     public String visitForControl(Java11Parser.ForControlContext ctx) {
-        return ctx.variableDeclaration().IDENTIFIER()+SPACE+IN_KEYWORD+SPACE+RANGE_KEYWORD+LPAREN+ctx.expression(0).expression(1).primary().literal().INT_LITERAL()+RPAREN+COLON+NEW_LINE_SPECIAL_CHARACTER;
+        return ctx.variableDeclaration().IDENTIFIER()+SPACE+IN_KEYWORD+SPACE+RANGE_KEYWORD+LPAREN+ctx.booleanExpression().primary(1).literal().INT_LITERAL()+RPAREN+COLON+NEW_LINE_SPECIAL_CHARACTER;
     }
 
     @Override
@@ -242,24 +260,20 @@ public class Java11VisitorImplementation extends Java11BaseVisitor<String> {
             return ctx.FLOAT_LITERAL().getText();
         else if (ctx.boolLiteral()!=null)
             return visitBoolLiteral(ctx.boolLiteral());
-        else
-            return visitStringLiteral(ctx.stringLiteral());
+        else if (ctx.CHAR_LITERAL()!=null)
+            return ctx.CHAR_LITERAL().getText();
+        return visitStringLiteral(ctx.stringLiteral());
     }
 
     @Override
     public String visitStringLiteral(Java11Parser.StringLiteralContext ctx) {
-        StringBuilder result= new StringBuilder();
-        for(int i=0; i<ctx.CHAR_LITERAL().size();i++){
-            result.append(ctx.CHAR_LITERAL(i).getText());
-        }
-        return result.toString();
+        return ctx.STRING_LITERAL().getText();
     }
 
     @Override
     public String visitBoolLiteral(Java11Parser.BoolLiteralContext ctx) {
         if (ctx.TRUE()!=null)
-            return ctx.TRUE().getText();
-        else
-            return ctx.FALSE().getText();
+            return TRUE_LITERAL;
+        return FALSE_LITERAL;
     }
 }
