@@ -22,7 +22,7 @@ public class Java2PythonTranspiler {
     }
 
     private void writeToPythonFile(String pathToFile, String content) throws IOException {
-        Files.write(Paths.get(pathToFile),content.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        Files.write(Paths.get(pathToFile), content.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     }
 
     private String transpile(String source) {
@@ -41,8 +41,13 @@ public class Java2PythonTranspiler {
     }
 
     public void runService(String pathToInputFile,String pathToOutputFile) throws IOException {
-        String input = readJavaFile(pathToInputFile);
-        String output = transpile(input);
-        writeToPythonFile(pathToOutputFile,output);
+        try {
+            String input = readJavaFile(pathToInputFile);
+            String output = transpile(input);
+            writeToPythonFile(pathToOutputFile,output);
+        }
+        catch(java.nio.file.NoSuchFileException e){
+            System.out.println("There is no file with given name");
+        }
     }
 }
